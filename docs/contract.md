@@ -1,0 +1,39 @@
+# Project contract
+
+Everyone codes against these names. To change one: announce it in the group chat, then update this file in the same pull request.
+
+## Exceptions (pharmacy/domain/exceptions.py)
+All inherit PharmacyError.
+InvalidPriceError, InvalidReorderLevelError, InvalidQuantityError,
+InsufficientStockError, UnauthorisedPrescriberError, AlreadyDispensedError,
+CancelledPrescriptionError, DuplicateMedicineError, EmptyPrescriptionError
+
+## Repository (pharmacy/data/repository.py)
+- add_medicine(med)
+- get_medicine(code)
+- list_medicines()
+- add_branch(name)
+- list_branches()
+- add_stock(branch_id, code, qty)
+- reduce_stock(branch_id, code, qty)    raises InsufficientStockError
+- get_stock(branch_id, code)
+- create_prescription(patient_id, branch_id, prescriber_code, lines) -> id
+- get_prescription(id)
+- list_pending_prescriptions()
+- set_status(id, status)
+- list_low_stock(branch_id=None)
+- list_prescriber_codes()
+- transaction()    context manager: BEGIN, then commit or rollback
+
+Rule: repository methods never commit. Only transaction() commits or rolls back.
+
+## Service (pharmacy/services/dispensing_service.py)
+register_medicine(...), receive_stock(...), create_prescription(...),
+dispense(prescription_id), cancel(prescription_id), low_stock(...)
+
+## Decisions
+1. The prescriber code is stored on the prescription.
+2. Only pending prescriptions can be cancelled.
+3. A prescription needs at least one line.
+4. One actor (Pharmacy Staff), no login.
+5. No transfers between branches.

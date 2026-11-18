@@ -221,3 +221,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project: local databases and editor settings
+*.db
+*.sqlite3
+.vscode/
+.idea/
