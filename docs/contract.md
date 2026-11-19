@@ -38,6 +38,10 @@ Rule: repository methods never commit. Only transaction() commits or rolls back.
 register_medicine(...), receive_stock(...), create_prescription(...),
 dispense(prescription_id), cancel(prescription_id), low_stock(...)
 
+## Domain helpers (pharmacy/domain/medicine.py)
+- make_medicine(code, name, unit_price, reorder_level, is_controlled) -> Medicine    builds the right subclass, use it in get_medicine
+- medicine.is_controlled    True or False, use it when saving the is_controlled column
+
 ## Decisions
 1. The prescriber code is stored on the prescription.
 2. Only pending prescriptions can be cancelled.
