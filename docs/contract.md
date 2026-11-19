@@ -3,10 +3,17 @@
 Everyone codes against these names. To change one: announce it in the group chat, then update this file in the same pull request.
 
 ## Exceptions (pharmacy/domain/exceptions.py)
-All inherit PharmacyError.
-InvalidPriceError, InvalidReorderLevelError, InvalidQuantityError,
-InsufficientStockError, UnauthorisedPrescriberError, AlreadyDispensedError,
-CancelledPrescriptionError, DuplicateMedicineError, EmptyPrescriptionError
+All inherit PharmacyError. Each one builds its own message, so pass the values, not a sentence.
+
+- InvalidPriceError(price)
+- InvalidReorderLevelError(level)
+- InvalidQuantityError(quantity, what="quantity", minimum=1)    use minimum=0 for stock quantities
+- InsufficientStockError(requested, available, medicine_code=None)
+- UnauthorisedPrescriberError(prescriber_code, medicine_code=None)
+- AlreadyDispensedError(prescription_id)
+- CancelledPrescriptionError(prescription_id, action="dispense")    use action="cancel" for a second cancel
+- DuplicateMedicineError(code)
+- EmptyPrescriptionError()    takes no arguments
 
 ## Repository (pharmacy/data/repository.py)
 - add_medicine(med)
