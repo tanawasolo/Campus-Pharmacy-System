@@ -42,6 +42,7 @@ dispense(prescription_id), cancel(prescription_id), low_stock(...)
 - make_medicine(code, name, unit_price, reorder_level, is_controlled) -> Medicine    in medicine.py. Builds the right subclass, use it in get_medicine
 - medicine.is_controlled    in medicine.py. True or False, use it when saving the is_controlled column
 - Branch(name, id=None)    in branch.py. id is None until the repository saves it. Build it as Branch(name, id=row_id)
+- StockItem(branch, medicine_code, quantity=0)    in stock_item.py. branch is a Branch object, not an id. Read the id as item.branch.id. quantity is read-only, change it with add(n) and remove(n)
 
 ## Decisions
 1. The prescriber code is stored on the prescription.
