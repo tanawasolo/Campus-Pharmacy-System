@@ -1,0 +1,14 @@
+git checkout feature/dispensing-service
+  from pharmacy.exceptions import (
+    PharmacyError,
+    EmptyPrescriptionError,
+    InsufficientStockError,
+    PrescriberNotAllowedError,
+    PrescriptionStateError,
+)
+from pharmacy.domain.medicine import ControlledMedicine
+
+
+class DispensingService:
+    def __init__(self, repo):
+        self.repo = repo
