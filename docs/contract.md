@@ -33,6 +33,8 @@ All inherit PharmacyError. Each one builds its own message, so pass the values, 
 - transaction()    context manager: BEGIN, then commit or rollback
 
 Rule: repository methods never commit. Only transaction() commits or rolls back.
+get_prescription(id) and list_pending_prescriptions() return Prescription objects with a Branch object and PrescriptionLine objects. Build the branch as Branch(name, id=row_id)
+create_prescription(...) takes branch_id and plain lines for saving, and set_status(id, status) only stores the status. Status rules live in Prescription.mark_dispensed() and cancel(), so C calls those first, then set_status
 
 ## Service (pharmacy/services/dispensing_service.py)
 register_medicine(...), receive_stock(...), create_prescription(...),
@@ -49,6 +51,7 @@ dispense(prescription_id), cancel(prescription_id), low_stock(...)
 - rx.validate()    raises EmptyPrescriptionError with no lines. C calls it in create_prescription
 - rx.mark_dispensed(), rx.cancel()    only way status changes. mark_dispensed also raises EmptyPrescriptionError
 - PENDING, DISPENSED, CANCELLED    status constants in prescription.py. Use them, not raw strings
+- PrescriberRegistry(allowed_codes=None)    in prescriber_registry.py. is_allowed(code) is True only for codes on the list, case and spaces ignored. None, blank and non-strings give False. Also add(code), remove(code), codes(). B loads prescribers into it, C calls is_allowed in dispense
 
 ## Decisions
 1. The prescriber code is stored on the prescription.
