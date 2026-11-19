@@ -43,6 +43,12 @@ dispense(prescription_id), cancel(prescription_id), low_stock(...)
 - medicine.is_controlled    in medicine.py. True or False, use it when saving the is_controlled column
 - Branch(name, id=None)    in branch.py. id is None until the repository saves it. Build it as Branch(name, id=row_id)
 - StockItem(branch, medicine_code, quantity=0)    in stock_item.py. branch is a Branch object, not an id. Read the id as item.branch.id. quantity is read-only, change it with add(n) and remove(n)
+- PrescriptionLine(medicine_code, quantity)    in prescription.py. quantity above 0
+- Prescription(patient_id, branch, prescriber_code=None, lines=None, id=None, status="pending")    in prescription.py. branch is a Branch object, not an id. Blank prescriber_code is stored as None
+- rx.add_line(medicine_code, quantity)    adds one line
+- rx.validate()    raises EmptyPrescriptionError with no lines. C calls it in create_prescription
+- rx.mark_dispensed(), rx.cancel()    only way status changes. mark_dispensed also raises EmptyPrescriptionError
+- PENDING, DISPENSED, CANCELLED    status constants in prescription.py. Use them, not raw strings
 
 ## Decisions
 1. The prescriber code is stored on the prescription.
