@@ -1,11 +1,14 @@
 PRAGMA foreign_keys = ON;
 
+-- SQLite dialect
 CREATE TABLE IF NOT EXISTS medicines (
   code TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  unit_price REAL NOT NULL CHECK (unit_price > 0),
-  reorder_level INTEGER NOT NULL CHECK (reorder_level >= 0),
-  is_controlled INTEGER NOT NULL DEFAULT 0 CHECK (is_controlled IN (0, 1))
+  unit_price REAL NOT NULL,
+  reorder_level INTEGER NOT NULL,
+  is_controlled INTEGER NOT NULL DEFAULT 0 CHECK (is_controlled IN (0, 1)),
+  CONSTRAINT medicines_unit_price_positive CHECK (unit_price > 0),
+  CONSTRAINT medicines_reorder_level_nonnegative CHECK (reorder_level >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS branches (
@@ -33,7 +36,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
   branch_id INTEGER NOT NULL REFERENCES branches(id),
   prescriber_code TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'dispensed', 'cancelled'))
+    CHECK (status = 'pending' OR status = 'dispensed' OR status = 'cancelled')
 );
 
 CREATE TABLE IF NOT EXISTS prescription_lines (

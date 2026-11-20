@@ -11,6 +11,7 @@ from pathlib import Path
 from pharmacy.domain.branch import Branch
 from pharmacy.domain.exceptions import DuplicateMedicineError, InsufficientStockError
 from pharmacy.domain.medicine import make_medicine
+from pharmacy.domain.prescription import Prescription, PrescriptionLine
 
 DATA_DIR = Path(__file__).parent
 SCHEMA_PATH = DATA_DIR / "schema.sql"
@@ -64,7 +65,7 @@ class Repository:
                     med.name,
                     med.unit_price,
                     med.reorder_level,
-                    1 if getattr(med, "is_controlled", False) else 0,
+                    1 if med.is_controlled else 0,
                 ),
             )
         except sqlite3.IntegrityError as exc:
@@ -74,6 +75,7 @@ class Repository:
             raise
 
     def get_medicine(self, code):
+        """Return the Medicine, or None when the code is not found."""
         row = self.conn.execute(
             "SELECT code, name, unit_price, reorder_level, is_controlled FROM medicines WHERE code = ?",
             (code,),
@@ -183,46 +185,27 @@ class Repository:
         return prescription_id
 
     def _build_prescription(self, row):
+        branch_row = self.conn.execute(
+            "SELECT id, name FROM branches WHERE id = ?", (row["branch_id"],)
+        ).fetchone()
+        branch = Branch(branch_row["name"], id=branch_row["id"])
         line_rows = self.conn.execute(
-            "SELECT medicine_code, quantity FROM prescription_lines WHERE prescription_id = ? ORDER BY id",
+            "SELECT medicine_code, quantity FROM prescription_lines "
+            "WHERE prescription_id = ? ORDER BY id",
             (row["id"],),
         ).fetchall()
-        lines_data = [(r["medicine_code"], r["quantity"]) for r in line_rows]
-        try:
-            from pharmacy.domain.prescription import Prescription, PrescriptionLine
-
-            p = Prescription(
-                row["patient_id"],
-                row["branch_id"],
-                row["prescriber_code"],
-                lines=None,
-                status=row["status"],
-                id=row["id"],
-            )
-            # try to populate lines if constructor doesn't
-            existing = getattr(p, "lines", None)
-            if existing is None or len(existing) == 0:
-                for code, qty in lines_data:
-                    try:
-                        p.add_line(PrescriptionLine(code, qty))
-                    except Exception:
-                        pass
-            return p
-        except Exception:
-            # Fallback simple object if domain Prescription not ready
-            class _PrescriptionView:
-                pass
-
-            p = _PrescriptionView()
-            p.id = row["id"]
-            p.patient_id = row["patient_id"]
-            p.branch_id = row["branch_id"]
-            p.prescriber_code = row["prescriber_code"]
-            p.status = row["status"]
-            p.lines = [{"medicine_code": c, "quantity": q} for c, q in lines_data]
-            return p
+        lines = [PrescriptionLine(r["medicine_code"], r["quantity"]) for r in line_rows]
+        return Prescription(
+            row["patient_id"],
+            branch,
+            row["prescriber_code"],
+            lines,
+            id=row["id"],
+            status=row["status"],
+        )
 
     def get_prescription(self, id):
+        """Return the Prescription, or None when the id is not found."""
         row = self.conn.execute(
             "SELECT id, patient_id, branch_id, prescriber_code, status FROM prescriptions WHERE id = ?",
             (id,),
