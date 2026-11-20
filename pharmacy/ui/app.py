@@ -1,48 +1,49 @@
-"""Role D: main window. Run with: python -m pharmacy.ui.app
+"""Main window: one tab per screen.
 
-Shell only. Each tab is a placeholder; replace it with a ttk.Frame subclass
-that takes the service in its constructor.
+Merge note: if the scaffold's app.py already creates the service and has a
+main() function, keep that part and only copy the tab-building code below.
 """
 import tkinter as tk
 from tkinter import ttk
 
-from pharmacy.data.repository import Repository
-from pharmacy.domain.prescriber_registry import PrescriberRegistry
-from pharmacy.services.dispensing_service import DispensingService
-
-TABS = ["Register Medicine", "Receive Stock", "Create Prescription", "Dispense", "Low Stock"]
-
-
-def build_service():
-    repo = Repository()
-    # TODO: load allowed codes through the repository (list_prescriber_codes)
-    registry = PrescriberRegistry(repo.list_prescriber_codes())
-    return DispensingService(repo, registry)
+from pharmacy.ui.register_medicine import RegisterMedicineFrame
+from pharmacy.ui.receive_stock import ReceiveStockFrame
+from pharmacy.ui.create_prescription import CreatePrescriptionFrame
+from pharmacy.ui.dispense import DispenseFrame
+from pharmacy.ui.low_stock import LowStockFrame
 
 
-def main():
-    root = tk.Tk()
-    root.title("Campus Pharmacy System")
-    root.geometry("900x600")
+class PharmacyApp(tk.Tk):
+    def __init__(self, service):
+        super().__init__()
+        self.title("Pharmacy Management System")
+        self.geometry("720x500")
 
-    try:
-        service = build_service()
-    except NotImplementedError:
-        service = None
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
-    if service is None:
-        ttk.Label(root, text="Backend not implemented yet (Roles A-C).").pack(pady=20)
+        # each screen is a Frame that receives the service
+        tabs = [
+            ("Register Medicine", RegisterMedicineFrame),
+            ("Receive Stock", ReceiveStockFrame),
+            ("Create Prescription", CreatePrescriptionFrame),
+            ("Dispense", DispenseFrame),
+            ("Low Stock", LowStockFrame),
+        ]
+        self.frames = []
+        for title, frame_class in tabs:
+            frame = frame_class(self.notebook, service)
+            self.notebook.add(frame, text=title)
+            self.frames.append(frame)
 
-    notebook = ttk.Notebook(root)
-    notebook.pack(fill="both", expand=True)
-    for name in TABS:
-        # TODO: replace placeholder with the real screen, passing `service`
-        frame = ttk.Frame(notebook)
-        ttk.Label(frame, text=f"{name}: TODO").pack(pady=20)
-        notebook.add(frame, text=name)
+        # reload the screen's data every time its tab is opened
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
 
-    root.mainloop()
+    def on_tab_changed(self, _event):
+        index = self.notebook.index(self.notebook.select())
+        self.frames[index].refresh()
 
 
-if __name__ == "__main__":
-    main()
+def run(service):
+    """Start the application."""
+    PharmacyApp(service).mainloop()
