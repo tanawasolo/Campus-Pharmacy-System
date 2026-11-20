@@ -1,7 +1,7 @@
 """Small helpers shared by every screen (keeps the screens simple)."""
 from tkinter import messagebox
 
-from pharmacy.exceptions import PharmacyError
+from pharmacy.domain import PharmacyError
 
 
 def safe_call(func, *args, **kwargs):
