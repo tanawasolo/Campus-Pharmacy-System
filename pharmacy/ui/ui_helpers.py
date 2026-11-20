@@ -1,4 +1,5 @@
 """Small helpers shared by every screen (keeps the screens simple)."""
+import traceback
 from tkinter import messagebox
 
 from pharmacy.domain import PharmacyError
@@ -16,6 +17,10 @@ def safe_call(func, *args, **kwargs):
         return True, func(*args, **kwargs)
     except PharmacyError as err:
         messagebox.showerror("Not allowed", str(err))
+        return False, None
+    except Exception as err:
+        traceback.print_exc()
+        messagebox.showerror("Unexpected error", f"Something went wrong: {err}")
         return False, None
 
 
@@ -42,10 +47,13 @@ def get(obj, name, default=""):
 def make_choices(items):
     """Turn a list of medicines/branches into dropdown text.
 
-    Returns (labels, lookup) where lookup maps "3 - Panadol" -> 3.
+    Returns (labels, lookup) where lookup maps "1 - Main Campus" -> 1
+    or "MED-001 - Paracetamol 500mg" -> "MED-001".
     """
     lookup = {}
     for item in items:
-        label = f"{get(item, 'id')} - {get(item, 'name')}"
-        lookup[label] = get(item, "id")
+        key = get(item, "id", None)
+        if key is None:
+            key = get(item, "code")
+        lookup[f"{key} - {get(item, 'name')}"] = key
     return list(lookup.keys()), lookup
