@@ -47,3 +47,11 @@ class PharmacyApp(tk.Tk):
 def run(service):
     """Start the application."""
     PharmacyApp(service).mainloop()
+
+if __name__ == "__main__":
+    from pharmacy.data.repository import Repository
+    from pharmacy.services.dispensing_service import DispensingService
+
+    repo = Repository("pharmacy.db")
+    repo.load_seed()
+    run(DispensingService(repo))
