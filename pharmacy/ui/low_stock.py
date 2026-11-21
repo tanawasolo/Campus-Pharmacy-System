@@ -31,7 +31,7 @@ class LowStockFrame(ttk.Frame):
         self.refresh()
 
     def load_branches(self):
-        ok, branches = safe_call(self.service.repo.list_branches)
+        ok, branches = safe_call(self.service.list_branches)
         if ok:
             labels, self.branch_lookup = make_choices(branches)
             self.branch_box["values"] = [self.ALL] + labels
@@ -47,6 +47,7 @@ class LowStockFrame(ttk.Frame):
         ok, items = safe_call(self.service.low_stock, branch_id)
         if ok:
             for item in items:
+                medicine = f"{get(item, 'medicine_code')} - {get(item, 'medicine_name')}"
                 self.table.insert("", "end", values=(
-                    get(item, "branch_id"), get(item, "medicine_id"),
+                    get(item, "branch_name"), medicine,
                     get(item, "quantity"), get(item, "reorder_level")))
