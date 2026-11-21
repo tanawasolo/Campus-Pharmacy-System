@@ -10,7 +10,7 @@ class ReceiveStockFrame(ttk.Frame):
         super().__init__(parent, padding=15)
         self.service = service
         self.branch_lookup = {}    # "1 - Main" -> 1
-        self.medicine_lookup = {}  # "3 - Panadol" -> 3
+        self.medicine_lookup = {}  # "MED-001 - Paracetamol" -> "MED-001"
 
         ttk.Label(self, text="Branch").grid(row=0, column=0, sticky="w", pady=5)
         self.branch_box = ttk.Combobox(self, state="readonly", width=28)
@@ -30,8 +30,8 @@ class ReceiveStockFrame(ttk.Frame):
 
     def refresh(self):
         """Reload the dropdown lists (new medicines may have been added)."""
-        ok, branches = safe_call(self.service.repo.list_branches)
-        ok2, medicines = safe_call(self.service.repo.list_medicines)
+        ok, branches = safe_call(self.service.list_branches)
+        ok2, medicines = safe_call(self.service.list_medicines)
         if ok and ok2:
             labels, self.branch_lookup = make_choices(branches)
             self.branch_box["values"] = labels
@@ -40,15 +40,15 @@ class ReceiveStockFrame(ttk.Frame):
 
     def on_receive(self):
         branch_id = self.branch_lookup.get(self.branch_box.get())
-        medicine_id = self.medicine_lookup.get(self.medicine_box.get())
-        if branch_id is None or medicine_id is None:
+        medicine_code = self.medicine_lookup.get(self.medicine_box.get())
+        if branch_id is None or medicine_code is None:
             messagebox.showerror("Missing choice", "Please choose a branch and a medicine.")
             return
         qty = read_number(self.qty_var.get(), "Quantity")
         if qty is None:
             return
 
-        ok, _ = safe_call(self.service.receive_stock, branch_id, medicine_id, qty)
+        ok, _ = safe_call(self.service.receive_stock, branch_id, medicine_code, qty)
         if ok:
             messagebox.showinfo("Done", "Stock received.")
             self.qty_var.set("")
