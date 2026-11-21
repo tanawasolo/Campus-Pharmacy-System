@@ -35,9 +35,16 @@ class DispensingService:
             or quantity <= 0
         ):
             raise InvalidQuantityError(quantity, "stock receipt")
-        self.repo.get_medicine(medicine_code)
+        if self.repo.get_medicine(medicine_code) is None:
+            raise PharmacyError(f"Medicine {medicine_code} not found.")
         with self.repo.transaction():
             self.repo.add_stock(branch_id, medicine_code, quantity)
+
+    def list_medicines(self):
+        return self.repo.list_medicines()
+
+    def list_branches(self):
+        return self.repo.list_branches()
 
     def low_stock(self, branch_id=None):
         return self.repo.list_low_stock(branch_id)
@@ -60,6 +67,8 @@ class DispensingService:
     def dispense(self, prescription_id) -> None:
         with self.repo.transaction():
             prescription = self.repo.get_prescription(prescription_id)
+            if prescription is None:
+                raise PharmacyError(f"Prescription {prescription_id} not found.")
             prescription.mark_dispensed()
 
             registry = PrescriberRegistry(self.repo.list_prescriber_codes())
@@ -83,5 +92,7 @@ class DispensingService:
     def cancel(self, prescription_id) -> None:
         with self.repo.transaction():
             prescription = self.repo.get_prescription(prescription_id)
+            if prescription is None:
+                raise PharmacyError(f"Prescription {prescription_id} not found.")
             prescription.cancel()
             self.repo.set_status(prescription_id, CANCELLED)
