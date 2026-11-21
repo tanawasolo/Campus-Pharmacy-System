@@ -9,9 +9,10 @@ class DispenseFrame(ttk.Frame):
         super().__init__(parent, padding=15)
         self.service = service
 
-        self.table = ttk.Treeview(self, columns=("id", "prescriber", "status"),
+        self.table = ttk.Treeview(self, columns=("id", "patient", "prescriber", "status"),
                                   show="headings", height=10, selectmode="browse")
         self.table.heading("id", text="Prescription ID")
+        self.table.heading("patient", text="Patient")
         self.table.heading("prescriber", text="Prescriber")
         self.table.heading("status", text="Status")
         self.table.pack(fill="both", expand=True)
@@ -28,11 +29,12 @@ class DispenseFrame(ttk.Frame):
         """Reload the list of pending prescriptions."""
         for row in self.table.get_children():
             self.table.delete(row)
-        ok, prescriptions = safe_call(self.service.repo.list_pending_prescriptions)
+        ok, prescriptions = safe_call(self.service.list_pending)
         if ok:
             for p in prescriptions:
                 self.table.insert("", "end", values=(
-                    get(p, "id"), get(p, "prescriber_code"), get(p, "status", "pending")))
+                    get(p, "id"), get(p, "patient_id"),
+                    get(p, "prescriber_code") or "(none)", get(p, "status", "pending")))
 
     def selected_id(self):
         """Return the id of the selected row, or None (and warn the user)."""
